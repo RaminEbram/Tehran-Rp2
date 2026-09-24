@@ -29,9 +29,11 @@ jobs:
 
       - name: Fix Deprecated Dependencies
         run: |
-          # اصلاح خودکار نام پکیج اسلایدر که در گیت‌هاب تغییر کرده است
+          # اصلاح نام کتابخانه اسلایدر
           find . -type f \( -name "*.gradle" -o -name "*.gradle.kts" \) -exec sed -i 's/com.github.smarteist:autoimageslider/com.github.smarteist:Android-Image-Slider/g' {} +
-          echo "android.enableJetifier=true" >> gradle.properties
+          
+          # اضافه کردن خط جدید برای جلوگیری از چسبیدن به خط قبلی
+          printf "\nandroid.enableJetifier=true\n" >> gradle.properties
 
       - name: Set up Java JDK 17
         uses: actions/setup-java@v4
