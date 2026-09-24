@@ -27,21 +27,25 @@ jobs:
           fi
           chmod +x gradlew || true
 
-      - name: Fix Deprecated Dependencies & Offline Libraries
+      - name: Bundle All Legacy Libraries Offline
         run: |
-          # 1. دانلود مستقیم فایل رسمی un7zip و قرار دادن آن در پوشه پروژه
           mkdir -p app/libs libs
+          
+          # دانلود مستقیم هر ۳ کتابخانه مورد نیاز پروژه به صورت فایل محلی
           curl -L -o app/libs/un7zip.aar https://repo1.maven.org/maven2/com/hzy/un7zip/1.6.0/un7zip-1.6.0.aar
-          cp app/libs/un7zip.aar libs/un7zip.aar
+          curl -L -o app/libs/prdownloader.aar https://jitpack.io/com/github/amitshekhariitbhu/PRDownloader/PRDownloader/1.0.1/PRDownloader-1.0.1.aar
+          curl -L -o app/libs/imageslider.aar https://jitpack.io/com/github/smarteist/Android-Image-Slider/1.4.0/Android-Image-Slider-1.4.0.aar
+          cp app/libs/*.aar libs/ || true
 
-          # 2. متصل کردن un7zip به فایل دانلود شده محلی به جای سرورهای خاموش شده
+          # اتصال مستقیم پروژه به فایل‌های دانلود شده به جای سرورهای از کار افتاده
           find . -type f \( -name "*.gradle" -o -name "*.gradle.kts" \) -exec sed -i -E "s|['\"][^'\"]*un7zip[^'\"]*['\"]|files('libs/un7zip.aar')|g" {} +
+          find . -type f \( -name "*.gradle" -o -name "*.gradle.kts" \) -exec sed -i -E "s|['\"][^'\"]*prdownloader[^'\"]*['\"]|files('libs/prdownloader.aar')|g" {} +
+          find . -type f \( -name "*.gradle" -o -name "*.gradle.kts" \) -exec sed -i -E "s|['\"][^'\"]*autoimageslider[^'\"]*['\"]|files('libs/imageslider.aar')|g" {} +
 
-          # 3. اصلاح کتابخانه اسلایدر
-          find . -type f \( -name "*.gradle" -o -name "*.gradle.kts" \) -exec sed -i -E 's|com\.github\.smarteist:autoimageslider[:0-9a-zA-Z._+-]*|com.github.smarteist:Android-Image-Slider:1.4.0|g' {} +
-
-          # 4. افزودن مخازن رسمی و تنظیمات AndroidX
+          # تغییر مخازن از jcenter به mavenCentral
           find . -type f \( -name "build.gradle" -o -name "settings.gradle" \) -exec sed -i 's/jcenter()/mavenCentral()/g' {} +
+          
+          # تنظیمات AndroidX
           echo "" >> gradle.properties
           echo "android.useAndroidX=true" >> gradle.properties
           echo "android.enableJetifier=true" >> gradle.properties
