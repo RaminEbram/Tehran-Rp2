@@ -18,16 +18,20 @@ jobs:
 
       - name: Download & Extract Source Code
         run: |
-          # دانلود سورس با نام دقیق شما از بخش Releases
           curl -L -o source.zip https://github.com/${{ github.repository }}/releases/download/v1.0/TehranRp-Launcher-Source.zip
           unzip -o source.zip
           
-          # اگر فایل‌ها داخل یک پوشه تو در تو اکسترکت شدند، آن‌ها را به ریشه پروژه منتقل می‌کند
           ROOT_DIR=$(find . -maxdepth 2 -name "settings.gradle*" -o -name "build.gradle*" | head -n 1 | xargs dirname)
           if [ "$ROOT_DIR" != "." ] && [ -n "$ROOT_DIR" ]; then
             cp -r "$ROOT_DIR"/* . || true
           fi
           chmod +x gradlew || true
+
+      - name: Fix Deprecated Dependencies
+        run: |
+          # اصلاح خودکار نام پکیج اسلایدر که در گیت‌هاب تغییر کرده است
+          find . -type f \( -name "*.gradle" -o -name "*.gradle.kts" \) -exec sed -i 's/com.github.smarteist:autoimageslider/com.github.smarteist:Android-Image-Slider/g' {} +
+          echo "android.enableJetifier=true" >> gradle.properties
 
       - name: Set up Java JDK 17
         uses: actions/setup-java@v4
