@@ -27,15 +27,21 @@ jobs:
           fi
           chmod +x gradlew || true
 
-      - name: Fix Deprecated Dependencies & Repositories
+      - name: Fix Deprecated Dependencies & Offline Libraries
         run: |
-          # 1. جایگزینی کتابخانه اسلایدر با سرور فعال
+          # 1. دانلود مستقیم فایل رسمی un7zip و قرار دادن آن در پوشه پروژه
+          mkdir -p app/libs libs
+          curl -L -o app/libs/un7zip.aar https://repo1.maven.org/maven2/com/hzy/un7zip/1.6.0/un7zip-1.6.0.aar
+          cp app/libs/un7zip.aar libs/un7zip.aar
+
+          # 2. متصل کردن un7zip به فایل دانلود شده محلی به جای سرورهای خاموش شده
+          find . -type f \( -name "*.gradle" -o -name "*.gradle.kts" \) -exec sed -i -E "s|['\"][^'\"]*un7zip[^'\"]*['\"]|files('libs/un7zip.aar')|g" {} +
+
+          # 3. اصلاح کتابخانه اسلایدر
           find . -type f \( -name "*.gradle" -o -name "*.gradle.kts" \) -exec sed -i -E 's|com\.github\.smarteist:autoimageslider[:0-9a-zA-Z._+-]*|com.github.smarteist:Android-Image-Slider:1.4.0|g' {} +
-          
-          # 2. جایگزینی کتابخانه un7zip از سرور خاموش شده به سرور فعال جدید
-          find . -type f \( -name "*.gradle" -o -name "*.gradle.kts" \) -exec sed -i -E 's|com\.hzy:un7zip[:0-9a-zA-Z._+-]*|com.github.hzy3774:AndroidUn7zip:v1.7.0|g' {} +
-          
-          # 3. اصلاح تنظیمات gradle.properties
+
+          # 4. افزودن مخازن رسمی و تنظیمات AndroidX
+          find . -type f \( -name "build.gradle" -o -name "settings.gradle" \) -exec sed -i 's/jcenter()/mavenCentral()/g' {} +
           echo "" >> gradle.properties
           echo "android.useAndroidX=true" >> gradle.properties
           echo "android.enableJetifier=true" >> gradle.properties
